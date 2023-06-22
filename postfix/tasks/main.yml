@@ -1,0 +1,53 @@
+---
+# tasks file for postfix
+- name: Check if postfix is installed
+  ansible.builtin.stat:
+    path: /usr/sbin/postfix
+  register: postfix_installed
+  become: true
+
+- name: Configure postfix
+  when: postfix_installed.stat.exists
+  block:
+    - name: Check for /etc/ssl/private
+      ansible.builtin.stat:
+        path: /etc/ssl/private
+      register: ssl_private
+      become: true
+
+    - name: Create /etc/ssl/private
+      ansible.builtin.file:
+        path: /etc/ssl/private
+        src: /etc/pki/tls/private
+        state: link
+      when: not ssl_private.stat.exists
+      become: true
+
+    - name: Check if postfix cert exists
+      ansible.builtin.stat:
+        path: "{{ certfile }}"
+      register: certfile_exists
+      become: true
+
+    - name: If not, create the cert and key
+      ansible.builtin.shell: |
+        openssl req -new -x509 -days 3650 -nodes -out {{ certfile }} -keyout {{ keyfile }} -subj "/C=US/ST=DC/L=DC/CN=localhost"
+      when: not certfile_exists.stat.exists
+      become: true
+
+    - name: Configure postfix
+      ansible.builtin.lineinfile:
+        path: /etc/postfix/main.cf
+        regexp: "^{{ item.key }} ="
+        line: "{{ item.key }} = {{ item.value }}"
+        state: present
+        create: true
+        backup: true
+      with_items: "{{ config }}"
+      become: true
+
+    - name: Restart postfix
+      ansible.builtin.systemd:
+        name: postfix
+        state: restarted
+      become: true

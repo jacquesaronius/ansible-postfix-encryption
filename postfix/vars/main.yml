@@ -1,0 +1,30 @@
+---
+# vars file for postfix
+keyfile: "/etc/ssl/private/postfix.key"
+
+certfile: "/etc/ssl/certs/postfix.crt"
+
+config:
+  - key: "smtp_tls_security_level"
+    value: "encrypt"
+
+  - key: "smtp_use_tls"
+    value: "yes"
+
+  - key: "smtp_tls_cert_file"
+    value: "{{ certfile }}"
+
+  - key: "smtp_tls_key_file"
+    value: "{{ keyfile }}"
+
+  - key: "smtpd_tls_security_level"
+    value: "encrypt"
+
+  - key: "smtpd_use_tls"
+    value: "yes"
+
+  - key: "smtpd_tls_cert_file"
+    value: "{{ certfile }}"
+
+  - key: "smtpd_tls_key_file"
+    value: "{{ keyfile }}"
