@@ -1,0 +1,5 @@
+---
+- name: Bootstrap Postfix encryption
+  hosts: all
+  roles:
+    - postfix
